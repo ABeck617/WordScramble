@@ -16,6 +16,9 @@ class ViewController: UITableViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
+        
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(promptForAnswer))
+        
         if let startWordsURL = Bundle.main.url(forResource: "start", withExtension: "txt") {
             if let startWords = try? String(contentsOf: startWordsURL) {
                 allWords = startWords.components(separatedBy: "\n")
@@ -45,6 +48,28 @@ class ViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Word", for: indexPath)
         cell.textLabel?.text = usedWords[indexPath.row]
         return cell
+    }
+    
+    
+    // promptForAnswer is being called from the BarButtonItem
+    @objc func promptForAnswer(){
+        // New UIAlertControler
+        let ac = UIAlertController (title: "Enter answer", message: nil, preferredStyle: .alert)
+        // add a text box to the UIAlertController
+        ac.addTextField()
+        
+        let submitAction = UIAlertAction(title: "Submiy", style: .default) {
+            [weak self, weak ac] action in
+            guard let answer = ac?.textFields?[0].text else { return }
+            self?.submit(answer)
+        }
+        
+        ac.addAction(submitAction)
+        present(ac, animated: true)
+    }
+    
+    func submit(_ answer: String) {
+        
     }
             
 }
