@@ -18,23 +18,24 @@ class ViewController: UITableViewController {
         
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(promptForAnswer))
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "New Game", style: .plain, target: self, action: #selector(startGame))
         
         if let startWordsURL = Bundle.main.url(forResource: "start", withExtension: "txt") {
             if let startWords = try? String(contentsOf: startWordsURL) {
                 allWords = startWords.components(separatedBy: "\n")
             }
             
-            startGame()
-
         }
             
             if allWords.isEmpty{
                 allWords = ["silkworm"]
             }
+        
+            startGame()
            
         }
     
-    func startGame(){
+     @objc func startGame(){
         title = allWords.randomElement()
         usedWords.removeAll(keepingCapacity: true)
         tableView.reloadData()
@@ -58,7 +59,7 @@ class ViewController: UITableViewController {
         // add a text box to the UIAlertController
         ac.addTextField()
         
-        let submitAction = UIAlertAction(title: "Submiy", style: .default) {
+        let submitAction = UIAlertAction(title: "Submit", style: .default) {
             [weak self, weak ac] action in
             guard let answer = ac?.textFields?[0].text else { return }
             self?.submit(answer)
@@ -71,8 +72,7 @@ class ViewController: UITableViewController {
     func submit(_ answer: String) {
         let lowerAnswer = answer.lowercased()
         
-        let errorTitle: String
-        let errorMessage: String
+      
 
         if isPossible(word: lowerAnswer) {
             if isOriginal(word: lowerAnswer) {
@@ -81,26 +81,26 @@ class ViewController: UITableViewController {
 
                     let indexPath = IndexPath(row: 0, section: 0)
                     tableView.insertRows(at: [indexPath], with: .automatic)
-                    
+
                     return
                 } else {
-                    errorTitle = "Word not recongnized"
-                    errorMessage = "You can't just make them up, you know"
+                    showErrorMessage("Word not recongnized", errorTitle: "You can't just make them up, you know")
                 }
             } else {
-                errorTitle = "Word already used"
-                errorMessage = "Be more original"
+                showErrorMessage("Word already used", errorTitle: "Be more original")
             }
         } else {
-            errorTitle = "Word is not possible"
-            errorMessage = "You can't spell that word from \(title!.lowercased())."
+            guard let title = title?.lowercased() else { return }
+            showErrorMessage("You can't spell that word from \"\(title)\".", errorTitle: "Word not possible")
         }
         
-        
-        let ac = UIAlertController(title: errorTitle, message: errorMessage, preferredStyle: .alert)
-        ac.addAction(UIAlertAction(title: "OK", style: .default))
-        present(ac, animated: true)
-    }
+        func showErrorMessage(_ errorMessage: String, errorTitle: String) {
+            let ac = UIAlertController(title: errorTitle, message: errorMessage, preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "Ok", style: .default))
+            present(ac, animated: true)
+        }
+
+
     
     func isPossible(word: String) -> Bool {
         guard var tempWord = title?.lowercased() else { return false }
@@ -117,10 +117,14 @@ class ViewController: UITableViewController {
     }
 
     func isOriginal(word: String) -> Bool {
+        guard word != title else { return false }
+        
         return !usedWords.contains(word)
     }
 
     func isReal(word: String) -> Bool {
+        guard word.count > 3 else { return false }
+        
         let checker = UITextChecker() // Comes from UIKit
         let range = NSRange(location: 0, length: word.utf16.count) // The range you want to scan inside the word
         let mispelledRange = checker.rangeOfMisspelledWord(in: word, range: range, startingAt: 0, wrap: false, language: "en")
@@ -135,3 +139,4 @@ class ViewController: UITableViewController {
 
 
 
+}
